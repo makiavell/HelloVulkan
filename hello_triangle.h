@@ -1,6 +1,10 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
+#include <filesystem>
+
+#include <fmt/core.h>
 
 // #include "vulkan/vulkan.h"
 #include <vector>
@@ -127,6 +131,7 @@ private:
         createLogicalDevice();
         createSwapChain();
         createImageViews();
+        createGraphicsPipeline();
     }
 
     void cleanup()
@@ -564,6 +569,32 @@ private:
         }
         return true;
     }
+
+    void createGraphicsPipeline() {
+        auto vertShaderCode = readFile("../shaders/vert.spv");
+        auto fragShaderCode = readFile("../shaders/frag.spv");
+    }
+
+    static std::vector<char> readFile(const std::string& filename) {
+        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+        if (!file.is_open()) {
+            auto currentDir = std::filesystem::current_path();
+
+            fmt::print("Failed to load the file! Filepath:{}, current folder:{} \n", filename, currentDir.string());
+            // printf("Failed to load the file! Filepath:%s, current folder:%s \n", filename.c_str(), currentDir.c_str());
+
+            throw std::runtime_error("failed to open file!");
+        }
+
+        const size_t fileSize = (size_t) file.tellg();
+        std::vector<char> buffer(fileSize);
+        file.seekg(0);
+        file.read(buffer.data(), fileSize);
+
+        file.close();
+        return buffer;
+    }
+
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL
     debugCallback(
