@@ -30,6 +30,8 @@ int main() {
 
     SimplePoint awesomePoint{1,2,3};
 
+    fmt::print("Hello! This is {}! \n", "fmtlib");
+
     try {
         app.run();
     } catch (const std::exception& e) {
