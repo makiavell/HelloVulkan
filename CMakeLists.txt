@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(tryVulkanCMake)
+project(HelloVulkan)
 
 set(CMAKE_CXX_STANDARD 23)
 
@@ -11,13 +11,14 @@ include_directories(/usr/local/include)
 include_directories(/opt/homebrew/include/)
 
 ## vulkan
-include_directories(../Vulkan/external)
-include_directories(../Vulkan/external/glm)
-include_directories(../Vulkan/external/gli)
-include_directories(../Vulkan/external/imgui)
-include_directories(../Vulkan/external/tinygltf)
-include_directories(../Vulkan/external/ktx/include)
-include_directories(../Vulkan/external/ktx/other_include)
+set(VULKAN_SDK_DIR ../../Vulkan)
+include_directories(${VULKAN_SDK_DIR}/external)
+include_directories(${VULKAN_SDK_DIR}/external/glm)
+include_directories(${VULKAN_SDK_DIR}/external/gli)
+include_directories(${VULKAN_SDK_DIR}/external/imgui)
+include_directories(${VULKAN_SDK_DIR}/external/tinygltf)
+include_directories(${VULKAN_SDK_DIR}/external/ktx/include)
+include_directories(${VULKAN_SDK_DIR}/external/ktx/other_include)
 
 # libraries:
 ## this must be set BEFORE `add_executable`
@@ -30,15 +31,15 @@ set(VK_SOURCES
         hello_triangle.cpp
         )
 
-add_executable(tryVulkanCMake ${VK_SOURCES})
+add_executable(HelloVulkan ${VK_SOURCES})
 
-target_link_libraries(tryVulkanCMake libvulkan.dylib)
-target_link_libraries(tryVulkanCMake libglfw.3.4.dylib)
+target_link_libraries(HelloVulkan libvulkan.dylib)
+target_link_libraries(HelloVulkan libglfw.3.4.dylib)
 
 # add fmt lib
 # /opt/homebrew/Cellar/fmt/8.1.1_1
 find_package(fmt)
-target_link_libraries(tryVulkanCMake fmt::fmt)
+target_link_libraries(HelloVulkan fmt::fmt)
 
 
 
