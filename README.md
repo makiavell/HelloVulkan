@@ -1,5 +1,3 @@
-# HelloVulkan
-learning vulkan
 
 
 ## What is going on?
@@ -30,3 +28,10 @@ Using fmtlib:
   target_link_libraries(tryVulkanCMake fmt::fmt)
   ```
   
+
+
+## Some Other Link
+* [Habr](https://habr.com/ru/post/462137/) collection of links + 1 lesson in 
+russian
+* [Vulkan-Hpp](https://github.com/KhronosGroup/Vulkan-Hpp) C++ wrappers
+* [C++ Examples](https://github.com/jherico/vulkan) of SaschaWillems/Vulkan
