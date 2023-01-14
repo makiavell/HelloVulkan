@@ -29,6 +29,9 @@ set(VK_SOURCES
         sample.h
         hello_triangle.h
         hello_triangle.cpp
+        BaseRenderer.h
+        SampleRenderer/Renderer.h
+        SampleRenderer/Renderer.cpp
         )
 
 add_executable(HelloVulkan ${VK_SOURCES})

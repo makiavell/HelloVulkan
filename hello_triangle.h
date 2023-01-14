@@ -23,6 +23,8 @@
 #include <map>
 #include <optional>
 
+#include "BaseRenderer.h"
+
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
@@ -82,18 +84,36 @@ struct SwapChainSupportDetails
     std::vector<VkPresentModeKHR> presentModes;
 };
 
-class HelloTriangleApplication
+class HelloTriangleRenderer : public IRenderer
 {
 public:
-    HelloTriangleApplication() = default;
-
-    void run()
+    HelloTriangleRenderer(GLFWwindow& window)
     {
-        initWindow();
+        this->window = &window;
         initVulkan();
-        mainLoop();
+    }
+
+    ~HelloTriangleRenderer() {
         cleanup();
     }
+
+    void resize(unsigned width, unsigned height) override
+    {
+
+    }
+
+    void render() override
+    {
+        drawFrame();
+    }
+
+//    void run()
+//    {
+//        initWindow();
+//        initVulkan();
+//        mainLoop();
+//        cleanup();
+//    }
 
 private:
     GLFWwindow* window;
@@ -990,8 +1010,15 @@ private:
         std::vector<char> buffer(fileSize);
         file.seekg(0);
         file.read(buffer.data(), fileSize);
-
         file.close();
+
+        if (buffer.empty())
+        {
+            auto currentDir = std::filesystem::current_path();
+            fmt::print("File is empty! Filepath:{}, current folder:{} \n", filename, currentDir.string());
+            throw std::runtime_error("failed to open file!");
+        }
+
         return buffer;
     }
 
@@ -1006,3 +1033,37 @@ private:
         return VK_FALSE;
     }
 };
+
+
+class HelloTriangleApplication
+{
+    std::unique_ptr<IRenderer> renderer;
+    GLFWwindow* window;
+
+    static GLFWwindow* makeWindow()
+    {
+        glfwInit();
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        auto window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+        return window;
+    }
+
+public:
+    HelloTriangleApplication()
+    {
+        window = makeWindow();
+        renderer = std::make_unique<HelloTriangleRenderer>(*window);
+    }
+
+    void run()
+    {
+        while (!glfwWindowShouldClose(window))
+        {
+            glfwPollEvents();
+            renderer->render();
+        }
+        // cleanup();
+    }
+};
+

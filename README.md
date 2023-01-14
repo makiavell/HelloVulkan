@@ -35,3 +35,4 @@ Using fmtlib:
 russian
 * [Vulkan-Hpp](https://github.com/KhronosGroup/Vulkan-Hpp) C++ wrappers
 * [C++ Examples](https://github.com/jherico/vulkan) of SaschaWillems/Vulkan
+* [Raw Vulkan](https://alain.xyz/blog/raw-vulkan) - a good article
