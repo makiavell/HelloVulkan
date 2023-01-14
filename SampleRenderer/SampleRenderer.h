@@ -4,15 +4,21 @@
 #define GLFW_BACKEND 2
 #define RENDERER_BACKEND GLFW_BACKEND
 
-#include "vulkan/vulkan.hpp"
 #include "../BaseRenderer.h"
 
 #if RENDERER_BACKEND == XGFX_BACKEND
     #include "CrossWindow/CrossWindow.h"
     #include "CrossWindow/Graphics.h"
 #else
-    #include <GLFW/glfw3.h>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 #endif
+
+#define VK_USE_PLATFORM_MACOS_MVK
+#include "vulkan/vulkan_core.h"
+#include "vulkan/vulkan_macos.h"
+#include "vulkan/vulkan.hpp"
+
 
 //#ifndef VK_USE_PLATFORM_MACOS_MVK
 //#define GLM_FORCE_SSE42 1
@@ -73,15 +79,15 @@ inline std::vector<char> readFile(const std::string& filename)
 };
 
 // Renderer
-class Renderer : public IRenderer
+class SampleRenderer : public IRenderer
 {
 public:
 #if RENDERER_BACKEND == XGFX_BACKEND
     Renderer(xwin::Window& window);
 #else
-    Renderer(GLFWwindow& window);
+    SampleRenderer(GLFWwindow& window);
 #endif
-    ~Renderer();
+    ~SampleRenderer();
 
     // Render onto the render target
     void render() override;

@@ -12,6 +12,7 @@
 #include <glm/mat4x4.hpp>
 
 #include "hello_triangle.h"
+#include "SampleRenderer/SampleRenderer.h"
 
 class SimplePoint
 {
@@ -25,8 +26,44 @@ private:
     int privateData;
 };
 
+class SimpleApp
+{
+public:
+    SimpleApp()
+    {
+        window = makeWindow();
+        // renderer = std::make_unique<HelloTriangleRenderer>(*window);
+        renderer = std::make_unique<SampleRenderer>(*window);
+    }
+
+    void run()
+    {
+        while (!glfwWindowShouldClose(window))
+        {
+            glfwPollEvents();
+            renderer->render();
+        }
+        // cleanup();
+    }
+
+private:
+    static GLFWwindow* makeWindow()
+    {
+        glfwInit();
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+        auto window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+        return window;
+    }
+
+private:
+    std::unique_ptr<IRenderer> renderer;
+    GLFWwindow* window;
+};
+
+
 int main() {
-    HelloTriangleApplication app;
+    SimpleApp app;
 
     SimplePoint awesomePoint{1,2,3};
 

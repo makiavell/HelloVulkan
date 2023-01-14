@@ -11,7 +11,6 @@
 #include <set>
 
 #define GLFW_INCLUDE_VULKAN
-
 #include <GLFW/glfw3.h>
 
 #define GLM_FORCE_RADIANS
@@ -1033,37 +1032,3 @@ private:
         return VK_FALSE;
     }
 };
-
-
-class HelloTriangleApplication
-{
-    std::unique_ptr<IRenderer> renderer;
-    GLFWwindow* window;
-
-    static GLFWwindow* makeWindow()
-    {
-        glfwInit();
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        auto window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-        return window;
-    }
-
-public:
-    HelloTriangleApplication()
-    {
-        window = makeWindow();
-        renderer = std::make_unique<HelloTriangleRenderer>(*window);
-    }
-
-    void run()
-    {
-        while (!glfwWindowShouldClose(window))
-        {
-            glfwPollEvents();
-            renderer->render();
-        }
-        // cleanup();
-    }
-};
-

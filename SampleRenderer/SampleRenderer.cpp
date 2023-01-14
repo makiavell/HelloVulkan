@@ -1,5 +1,6 @@
 // #include "SampleRenderer/Renderer.h"
-#include "Renderer.h"
+#include "SampleRenderer.h"
+#include "../Common.h"
 
 //#if RENDERER_BACKEND == XGFX_BACKEND
 //#include "CrossWindow/CrossWindow.h"
@@ -95,7 +96,7 @@ Renderer::Renderer(xwin::Window& window)
     tStart = std::chrono::high_resolution_clock::now();
 }
 #else
-Renderer::Renderer(GLFWwindow& window)
+SampleRenderer::SampleRenderer(GLFWwindow& window)
 {
     initializeAPI(window);
     initializeResources();
@@ -105,7 +106,7 @@ Renderer::Renderer(GLFWwindow& window)
 #endif
 
 
-Renderer::~Renderer()
+SampleRenderer::~SampleRenderer()
 {
     mDevice.waitIdle();
 
@@ -114,7 +115,7 @@ Renderer::~Renderer()
     destroyAPI();
 }
 
-void Renderer::destroyAPI()
+void SampleRenderer::destroyAPI()
 {
     // Command Pool
     mDevice.destroyCommandPool(mCommandPool);
@@ -129,7 +130,7 @@ void Renderer::destroyAPI()
     mInstance.destroy();
 }
 
-void Renderer::destroyFrameBuffer()
+void SampleRenderer::destroyFrameBuffer()
 {
     // Depth Attachment
     mDevice.freeMemory(mDepthImageMemory);
@@ -147,7 +148,53 @@ void Renderer::destroyFrameBuffer()
     }
 }
 
-void Renderer::destroyCommands()
+vk::Instance createInstance()
+{
+    const bool enableValidationLayers = true;
+
+    if (enableValidationLayers && !checkValidationLayerSupport())
+        throw std::runtime_error("validation layers requested, but not available!");
+
+    VkApplicationInfo appInfo{};
+    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    appInfo.pApplicationName = "Hello Triangle";
+    appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.pEngineName = "No Engine";
+    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
+    appInfo.apiVersion = VK_API_VERSION_1_0;
+
+    VkInstanceCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    createInfo.pApplicationInfo = &appInfo;
+
+    auto extensions = getRequiredExtensions();
+    createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+    createInfo.ppEnabledExtensionNames = extensions.data();
+
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
+    if (enableValidationLayers)
+    {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+        createInfo.ppEnabledLayerNames = validationLayers.data();
+
+        populateDebugMessengerCreateInfo(debugCreateInfo);
+        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo;
+    }
+    else
+    {
+        createInfo.enabledLayerCount = 0;
+        createInfo.pNext = nullptr;
+    }
+
+    VkInstance instance;
+    if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
+        throw std::runtime_error("failed to create instance!");
+
+    return vk::Instance(instance);
+}
+
+
+void SampleRenderer::destroyCommands()
 {
     mDevice.freeCommandBuffers(mCommandPool, mCommandBuffers);
 }
@@ -155,7 +202,7 @@ void Renderer::destroyCommands()
 #if RENDERER_BACKEND == XGFX_BACKEND
 void Renderer::initializeAPI(xwin::Window& window)
 #else
-void Renderer::initializeAPI(GLFWwindow& window)
+void SampleRenderer::initializeAPI(GLFWwindow& window)
 #endif
 {
     /**
@@ -220,9 +267,11 @@ void Renderer::initializeAPI(GLFWwindow& window)
             vk::InstanceCreateFlags(), &appInfo,
             static_cast<uint32_t>(layers.size()), layers.data(),
             static_cast<uint32_t>(extensions.size()), extensions.data());
-
+#if RENDERER_BACKEND == XGFX_BACKEND
     mInstance = vk::createInstance(info);
-
+#else
+    mInstance = createInstance();
+#endif
     // 💡 Physical Device
     std::vector<vk::PhysicalDevice> physicalDevices =
             mInstance.enumeratePhysicalDevices();
@@ -237,9 +286,10 @@ void Renderer::initializeAPI(GLFWwindow& window)
     mSurface = xgfx::getSurface(&window, mInstance);
 #else
     VkSurfaceKHR _surface;
-    if (glfwCreateWindowSurface(mInstance, &window, nullptr, &_surface) != VK_SUCCESS)
+    auto code = glfwCreateWindowSurface(static_cast<VkInstance>(mInstance), &window, nullptr, &_surface);
+    if (code != VK_SUCCESS)
         throw std::runtime_error("failed to create window surface!");
-    mSurface = _surface;
+    mSurface = vk::SurfaceKHR(_surface);
 #endif
 
     if (!mPhysicalDevice.getSurfaceSupportKHR(mQueueFamilyIndex, mSurface))
@@ -337,7 +387,7 @@ void Renderer::initializeAPI(GLFWwindow& window)
     createSynchronization();
 }
 
-void Renderer::setupSwapchain(unsigned width, unsigned height)
+void SampleRenderer::setupSwapchain(unsigned width, unsigned height)
 {
     // Setup viewports, Vsync
     vk::Extent2D swapchainSize = vk::Extent2D(width, height);
@@ -403,7 +453,7 @@ void Renderer::setupSwapchain(unsigned width, unsigned height)
     mSwapchainBuffers.resize(backbufferCount);
 }
 
-void Renderer::initFrameBuffer()
+void SampleRenderer::initFrameBuffer()
 {
     // Create Depth Image Data
     mDepthImage = mDevice.createImage(vk::ImageCreateInfo(
@@ -463,7 +513,7 @@ void Renderer::initFrameBuffer()
     }
 }
 
-void Renderer::createRenderPass()
+void SampleRenderer::createRenderPass()
 {
     std::vector<vk::AttachmentDescription> attachmentDescriptions = {
             vk::AttachmentDescription(
@@ -514,7 +564,7 @@ void Renderer::createRenderPass()
             dependencies.data()));
 }
 
-void Renderer::createSynchronization()
+void SampleRenderer::createSynchronization()
 {
     // Semaphore used to ensures that image presentation is complete before
     // starting to submit again
@@ -536,7 +586,7 @@ void Renderer::createSynchronization()
     }
 }
 
-void Renderer::initializeResources()
+void SampleRenderer::initializeResources()
 {
     /**
      * Create Shader uniform binding data structures:
@@ -854,9 +904,8 @@ void Renderer::initializeResources()
     initFrameBuffer();
 
     // Create Graphics Pipeline
-
-    std::vector<char> vertShaderCode = readFile("assets/triangle.vert.spv");
-    std::vector<char> fragShaderCode = readFile("assets/triangle.frag.spv");
+    std::vector<char> vertShaderCode = readFile("../SampleRenderer/assets/triangle.vert.spv");
+    std::vector<char> fragShaderCode = readFile("../SampleRenderer/assets/triangle.frag.spv");
 
     mVertModule = mDevice.createShaderModule(vk::ShaderModuleCreateInfo(
             vk::ShaderModuleCreateFlags(), vertShaderCode.size(),
@@ -936,7 +985,7 @@ void Renderer::initializeResources()
     mPipeline = pipeline.value;
 }
 
-void Renderer::destroyResources()
+void SampleRenderer::destroyResources()
 {
     // Vertices
     mDevice.freeMemory(mVertices.memory);
@@ -982,7 +1031,7 @@ void Renderer::destroyResources()
     }
 }
 
-void Renderer::createCommands()
+void SampleRenderer::createCommands()
 {
     mCommandBuffers =
             mDevice.allocateCommandBuffers(vk::CommandBufferAllocateInfo(
@@ -990,7 +1039,7 @@ void Renderer::createCommands()
                     static_cast<uint32_t>(mSwapchainBuffers.size())));
 }
 
-void Renderer::setupCommands()
+void SampleRenderer::setupCommands()
 {
     std::vector<vk::ClearValue> clearValues = {
             vk::ClearColorValue(std::array<float, 4>{0.2f, 0.2f, 0.2f, 1.0f}),
@@ -1026,7 +1075,7 @@ void Renderer::setupCommands()
     }
 }
 
-void Renderer::render()
+void SampleRenderer::render()
 {
     // Framelimit set to 60 fps
     tEnd = std::chrono::high_resolution_clock::now();
@@ -1096,7 +1145,7 @@ void Renderer::render()
     }
 }
 
-void Renderer::resize(unsigned width, unsigned height)
+void SampleRenderer::resize(unsigned width, unsigned height)
 {
     mDevice.waitIdle();
     destroyFrameBuffer();
